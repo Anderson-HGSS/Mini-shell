@@ -75,33 +75,33 @@ int tokenizar_linha(const char *linha, char *tokens[], int max_tokens) {
 
 
 
-#define MAX_TOKENS 16
+// #define MAX_TOKENS 16
 
-/* ... coloque aqui a sua função tokenizar_linha ... */
+// /* ... coloque aqui a sua função tokenizar_linha ... */
 
-static void testar(const char *linha) {
-    char *tokens[MAX_TOKENS];
-    int n = tokenizar_linha(linha, tokens, MAX_TOKENS);
+// static void testar(const char *linha) {
+//     char *tokens[MAX_TOKENS];
+//     int n = tokenizar_linha(linha, tokens, MAX_TOKENS);
 
-    printf("Linha: [%s]\n", linha);
-    if (n < 0) {
-        printf("  erro de memoria\n\n");
-        return;
-    }
-    printf("  %d token(s)\n", n);
-    for (int k = 0; k < n; k++) {
-        printf("  tokens[%d] = [%s]\n", k, tokens[k]);
-        free(tokens[k]);
-    }
-    printf("\n");
-}
+//     printf("Linha: [%s]\n", linha);
+//     if (n < 0) {
+//         printf("  erro de memoria\n\n");
+//         return;
+//     }
+//     printf("  %d token(s)\n", n);
+//     for (int k = 0; k < n; k++) {
+//         printf("  tokens[%d] = [%s]\n", k, tokens[k]);
+//         free(tokens[k]);
+//     }
+//     printf("\n");
+// }
 
-int main(void) {
-    testar("echo ola");
-    testar("echo \"ola mundo\" teste");
-    testar("   muitos     espacos   aqui   ");
-    testar("\"so entre aspas\"");
-    testar("aspa nao fechada \"abc def");
-    testar("");
-    return 0;
-}
+// int main(void) {
+//     testar("echo ola");
+//     testar("echo \"ola mundo\" teste");
+//     testar("   muitos     espacos   aqui   ");
+//     testar("\"so entre aspas\"");
+//     testar("aspa nao fechada \"abc def");
+//     testar("");
+//     return 0;
+// }
