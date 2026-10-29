@@ -16,7 +16,7 @@ int executar_builtin(Comando *cmd);
  * publicamente, embora no builtins.c atual tenham sido declaradas como static
  * para melhor proteção de escopo).
  */
-int verfComandointerno(char *cmdName);
+int verfComandointerno(Comando *cmd);
 int verfDestino(Comando *cmd);
 int builtincd(char **args);
 int builtinexit(char **args);

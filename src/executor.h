@@ -14,6 +14,6 @@ int redirecionaEntrada(const char *arquivo);
 int redirecionaSaida(const char *arquivo);
 int redirecionaAppend(const char *arquivo);
 void executaBackground(Comando *cmd);
-int executar_comando_simples(Comando *cmd);
+
 
 #endif /* EXECUTOR_H */

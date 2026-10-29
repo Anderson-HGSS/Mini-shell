@@ -104,7 +104,7 @@
 #include <errno.h>
 #include "parser.h"
 
-int executar_comando_simples(Comando *cmd){
+int executaExterno(Comando *cmd){
     
     pid_t pid = fork();
 
@@ -121,7 +121,7 @@ int executar_comando_simples(Comando *cmd){
          */
         
         execvp(cmd->argv[0], cmd->argv);
-        fprintf(stderr,"mysh: %s: comando não encontrado",cmd->argv[0]);
+        fprintf(stderr,"mysh: %s: comando não encontrado\n",cmd->argv[0]);
        
         _exit(127);
  
@@ -132,8 +132,8 @@ int executar_comando_simples(Comando *cmd){
     waitpid(pid, &status, 0);
     if (WIFEXITED(status)){
         int codigo_saida = WEXITSTATUS(status);
-        printf("o processo terminou com o código %d \n",codigo_saida);
+        printf("o processo terminou com o código %d \n", codigo_saida);
     }
     
-
+    
 }
