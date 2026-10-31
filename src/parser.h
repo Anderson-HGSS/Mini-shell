@@ -2,7 +2,7 @@
 #define PARSER_H
 
 #define MAX_ARGS 64
-#define MAX_CMDS 16
+#define MAX_CMDS 128
 #define MAX_LINE 1024
 
 typedef struct {
@@ -19,7 +19,10 @@ typedef struct {
     int background; /* 1 se terminar com '&' */
 } LinhaComando;
 
-/* Declaração das funções do parser (baseado no esqueleto) */
-int tokenizar_linha(const char *linha, char *tokens[], int max_tokens);
 
+
+
+/* Declaração das funções do parser (baseado no esqueleto) */
+int tokenizar_linha(const char *linha, char *tokens[], int entre_aspas[], int max_tokens);
+int interpretar_tokens(char *tokens[], const int entre_aspas[], int n, LinhaComando *linha, char *erro, size_t erro_tam);
 #endif

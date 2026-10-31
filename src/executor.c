@@ -23,23 +23,25 @@ static void aplicar_redirecionamentos(const Comando *cmd)
         dup2(fd, 0);
         close(fd);
     }
-    
+
     if (cmd->arq_saida != NULL)
     {
-        int flags = O_WRONLY | O_CREAT/* | TODO: O_TRUNC ou O_APPEND */;
+        int flags = O_WRONLY | O_CREAT /* | TODO: O_TRUNC ou O_APPEND */;
         int fd;
-        
-        if(cmd->append == 0){
+
+        if (cmd->append == 0)
+        {
 
             fd = open(cmd->arq_saida, flags | O_APPEND, 0644);
-        
-        }else if(cmd->append == 1){
-        
-            fd = open(cmd->arq_saida, flags | O_TRUNC, 0644);
-        
         }
-        
-        if(fd < 0){
+        else if (cmd->append == 1)
+        {
+
+            fd = open(cmd->arq_saida, flags | O_TRUNC, 0644);
+        }
+
+        if (fd < 0)
+        {
             perror(cmd->arq_saida);
             _exit(1);
         }
@@ -47,11 +49,86 @@ static void aplicar_redirecionamentos(const Comando *cmd)
         dup2(fd, 1);
         close(fd);
 
-
         /* TODO: open com modo 0644, tratar erro, dup2, close */
     }
 }
 
+void executaPipeline(LinhaComando *linha)
+{
+    int pipes[MAX_CMDS - 1][2];
+    pid_t pids[MAX_CMDS];
+    int n = linha->n_cmds;
+
+    for (int i = 0; i < n - 1; i++)
+    {
+        if (pipe(pipes[i]) < 0)
+        {
+            perror("mysh: pipe");
+            for (int j = 0; j < i; j++)
+            {
+                close(pipes[j][0]);
+                close(pipes[j][1]);
+            }
+            return;
+        }
+    }
+    
+    /*filhos criados*/
+    int criados = 0;
+    for (int i = 0; i < n; i++)
+    {
+        pids[i] = fork();
+        if (pids[i] < 0)
+        {
+            perror("mysh: fork");
+            break;
+        }
+        criados++;
+
+        if (pids[i] == 0)
+        {
+            /* filho*/
+            signal(SIGINT, SIG_DFL);
+
+            if (i > 0)
+            {
+                dup2(pipes[i - 1][0], STDIN_FILENO);
+            }
+
+            if (i < n - 1)
+            {
+                dup2(pipes[i][1], STDOUT_FILENO);
+            }
+
+            for (int j = 0; j < n - 1; j++)
+            {
+                close(pipes[j][0]);
+                close(pipes[j][1]);
+            }
+
+            /* redirecionamentos vêm DEPOIS: '<' e '>' têm prioridade sobre o pipe */
+            aplicar_redirecionamentos(&linha->comandos[i]);
+
+            execvp(linha->comandos[i].argv[0], linha->comandos[i].argv);
+            fprintf(stderr, "mysh: %s: comando não encontrado\n", linha->comandos[i].argv[0]);
+
+            _exit(127);
+        }
+    }
+
+    /* ---- PAI ---- */
+    for (int j = 0; j < n - 1; j++)
+    {
+        close(pipes[j][0]);
+        close(pipes[j][1]);
+    }
+
+    if (!linha->background)
+    {
+        for (int i = 0; i < criados; i++)
+            waitpid(pids[i], NULL, 0);
+    }
+}
 
 int executaExterno(Comando *cmd)
 {
@@ -69,9 +146,6 @@ int executaExterno(Comando *cmd)
 
         /* ---- FILHO ---- */
         /* TODO (Passo 8): restaurar SIGINT para SIG_DFL */
-        /* TODO (Passo 6): aplicar redirecionamentos
-         */
-
 
         aplicar_redirecionamentos(cmd);
 
@@ -88,6 +162,5 @@ int executaExterno(Comando *cmd)
     if (WIFEXITED(status))
     {
         int codigo_saida = WEXITSTATUS(status);
-        printf("o processo terminou com o código %d \n", codigo_saida);
     }
 }
