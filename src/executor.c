@@ -124,6 +124,8 @@ void executaPipeline(LinhaComando *linha)
         close(pipes[j][1]);
     }
 
+
+    // tratamento de sinais para quando tiver pipe no meio
     if (!linha->background)
     {
         int interrompido = 0;
