@@ -10,7 +10,6 @@
 
 static int proximo_job = 1;
 
-
 static void aplicar_redirecionamentos(const Comando *cmd)
 {
     if (cmd->arq_entrada != NULL)
@@ -74,7 +73,7 @@ void executaPipeline(LinhaComando *linha)
             return;
         }
     }
-    
+
     /*filhos criados*/
     int criados = 0;
     for (int i = 0; i < n; i++)
@@ -127,14 +126,23 @@ void executaPipeline(LinhaComando *linha)
 
     if (!linha->background)
     {
+        int interrompido = 0;
         for (int i = 0; i < criados; i++)
-            waitpid(pids[i], NULL, 0);
+        {
+            int status;
+            if (waitpid(pids[i], &status, 0) > 0 &&
+                WIFSIGNALED(status) && WTERMSIG(status) == SIGINT)
+                interrompido = 1;
+        }
+        /*tratamento \n do Ctrl + C*/
+        if (interrompido)
+            write(STDOUT_FILENO, "\n", 1);
     }
+
     else if (criados > 0)
     {
         printf("[%d] %d\n", proximo_job++, pids[criados - 1]);
     }
-    
 }
 
 int executaExterno(Comando *cmd, int background)
@@ -149,15 +157,17 @@ int executaExterno(Comando *cmd, int background)
     }
 
     if (pid == 0)
-    {   
+    {
 
-        if (background){
-            int fd = open("/dev/null",O_RDONLY);
-            dup2(fd,0);
+        // Aqui o comando é 'executado' em background
+        if (background)
+        {
+            int fd = open("/dev/null", O_RDONLY); // buraco negro
+            dup2(fd, 0);
             close(fd);
         }
-         
-        signal(SIGINT,SIG_DFL);
+
+        signal(SIGINT, SIG_DFL);
         aplicar_redirecionamentos(cmd);
 
         // Aqui executa os comandos externos
@@ -167,22 +177,25 @@ int executaExterno(Comando *cmd, int background)
         _exit(127);
     }
 
-    
-
-    
     /* ---- PAI ---- */
-      if (background)
+    if (background)
     {
-        printf("[%d] %d\n", proximo_job++, pid);  
+        printf("[%d] %d\n", proximo_job++, pid);
         return 0;
     }
 
     int status;
-    waitpid(pid, &status, 0);
-    if (WIFEXITED(status))
+    if (waitpid(pid, &status, 0) < 0)
+        return -1;
+
+    if (WIFSIGNALED(status))
     {
-        int codigo_saida = WEXITSTATUS(status);
-        return codigo_saida;
-       
+        /*tratamento \n do Ctrl + C*/
+        if (WTERMSIG(status) == SIGINT){
+            write(STDOUT_FILENO, "\n", 1);
+        }
+        return 128 + WTERMSIG(status);
     }
+
+    return WEXITSTATUS(status);
 }

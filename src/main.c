@@ -11,31 +11,39 @@
 #include "builtins.h"
 
 
-// static void tratador_sigchld(int sig) {
-//     (void)sig;
-//     int errno_salvo = errno;
-//     /* TODO: laço com waitpid(-1, &st, WNOHANG) > 0 */
-//     30
-// }
-
-// errno = errno_salvo;
-
-// static void instalar_sinais(void) {
-//     struct sigaction sa;
+static void tratador_sigchld(int sig) {
+    (void)sig;
     
-//     memset(&sa, 0, sizeof sa);
+    int errno_salvo = errno;
+    int status;
+    pid_t pid;
     
-//     sigemptyset(&sa.sa_mask);
+    while((pid = waitpid(-1, &status, WNOHANG)) > 0 );
+
+    errno = errno_salvo;
+
+}
+
+
+static void instalar_sinais(void) {
+    struct sigaction sa;
     
-//     // sa.sa_handler = tratador_sigchld;
-//     sa.sa_flags = SA_RESTART;
+    memset(&sa, 0, sizeof sa);
+    
+    sigemptyset(&sa.sa_mask);
+    
+    sa.sa_handler = tratador_sigchld;
+    sa.sa_flags = SA_RESTART; /* read/fgets não falham com EINTR */
 
-//     /* read/fgets não falham com EINTR */
-//     sigaction(SIGCHLD, &sa, NULL);
+    sigaction(SIGCHLD, &sa, NULL);
 
-//     // Aqui a gente trata o Ctrl + C
-//     /* TODO: SIGINT -> SIG_IGN (ou tratador que só escreve "\n") */
-// }
+    // Aqui a gente trata o Ctrl + C
+    /* TODO: SIGINT -> SIG_IGN (ou tratador que só escreve "\n") */
+    
+    sa.sa_handler = SIG_IGN;
+    sa.sa_flags = 0;
+    sigaction(SIGINT, &sa, NULL);
+}
 
 int main(void)
 {
@@ -45,8 +53,9 @@ int main(void)
     LinhaComando linha_cmd;
     char erro[256];
 
-    /* TODO (Passo 8): instalar tratadores de sinal aqui */
-
+    /*(Passo 08): instalar tratadores de sinal*/
+    instalar_sinais();
+    
     for (;;)
     {
         printf("mysh> ");
@@ -76,9 +85,8 @@ int main(void)
         if (interpretar_tokens(listaTokens, entre_aspas, num_tokens,
                                &linha_cmd, erro, sizeof erro) < 0)
         {
-            fprintf(stderr, "mysh: %s\n", erro);
+            fprintf(stderr, "\nmysh: %s\n", erro);
         }
-
 
 
         /* 3. executar */
