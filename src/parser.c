@@ -161,6 +161,7 @@ int interpretar_tokens(char *tokens[], const int entre_aspas[], int n, LinhaComa
     if (atual->argc == 0) {
         snprintf(erro, erro_tam, "erro de sintaxe: comando vazio");
         return -1;
+        
     }
 
     //Atualiza a quantidade de comandos na linha, pois não pega o ultimo.
