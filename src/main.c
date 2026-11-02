@@ -10,6 +10,33 @@
 #include "executor.h"
 #include "builtins.h"
 
+
+// static void tratador_sigchld(int sig) {
+//     (void)sig;
+//     int errno_salvo = errno;
+//     /* TODO: laço com waitpid(-1, &st, WNOHANG) > 0 */
+//     30
+// }
+
+// errno = errno_salvo;
+
+// static void instalar_sinais(void) {
+//     struct sigaction sa;
+    
+//     memset(&sa, 0, sizeof sa);
+    
+//     sigemptyset(&sa.sa_mask);
+    
+//     // sa.sa_handler = tratador_sigchld;
+//     sa.sa_flags = SA_RESTART;
+
+//     /* read/fgets não falham com EINTR */
+//     sigaction(SIGCHLD, &sa, NULL);
+
+//     // Aqui a gente trata o Ctrl + C
+//     /* TODO: SIGINT -> SIG_IGN (ou tratador que só escreve "\n") */
+// }
+
 int main(void)
 {
     char linha[MAX_LINE];
@@ -51,14 +78,20 @@ int main(void)
         {
             fprintf(stderr, "mysh: %s\n", erro);
         }
+
+
+
         /* 3. executar */
         else if (linha_cmd.n_cmds == 1)
         {
-            if (verfComandointerno(&linha_cmd.comandos[0]) == 0)
-                executaExterno(&linha_cmd.comandos[0]);
+
+            if (verfComandointerno(&linha_cmd.comandos[0]) == 0){
+                executaExterno(&linha_cmd.comandos[0],linha_cmd.background);            
+            }
+
         }
-        else
-        {
+
+        else{
             executaPipeline(&linha_cmd);
         }
 

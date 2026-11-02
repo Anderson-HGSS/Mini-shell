@@ -142,6 +142,7 @@ int interpretar_tokens(char *tokens[], const int entre_aspas[], int n, LinhaComa
             if (i != n - 1) {
                 /*verifica se o & não está no final da linha de comando*/
                 snprintf(erro, erro_tam, "'&' só é válido no fim da linha");
+                
                 return -1;
             }
             linha->background = 1;

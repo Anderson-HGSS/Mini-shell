@@ -8,6 +8,8 @@
 #include <errno.h>
 #include "parser.h"
 
+static int proximo_job = 1;
+
 
 static void aplicar_redirecionamentos(const Comando *cmd)
 {
@@ -34,7 +36,7 @@ static void aplicar_redirecionamentos(const Comando *cmd)
 
             fd = open(cmd->arq_saida, flags | O_APPEND, 0644);
         }
-        else if (cmd->append == 1)
+        else
         {
 
             fd = open(cmd->arq_saida, flags | O_TRUNC, 0644);
@@ -128,9 +130,14 @@ void executaPipeline(LinhaComando *linha)
         for (int i = 0; i < criados; i++)
             waitpid(pids[i], NULL, 0);
     }
+    else if (criados > 0)
+    {
+        printf("[%d] %d\n", proximo_job++, pids[criados - 1]);
+    }
+    
 }
 
-int executaExterno(Comando *cmd)
+int executaExterno(Comando *cmd, int background)
 {
 
     pid_t pid = fork();
@@ -142,11 +149,15 @@ int executaExterno(Comando *cmd)
     }
 
     if (pid == 0)
-    {
+    {   
 
-        /* ---- FILHO ---- */
-        /* TODO (Passo 8): restaurar SIGINT para SIG_DFL */
-
+        if (background){
+            int fd = open("/dev/null",O_RDONLY);
+            dup2(fd,0);
+            close(fd);
+        }
+         
+        signal(SIGINT,SIG_DFL);
         aplicar_redirecionamentos(cmd);
 
         // Aqui executa os comandos externos
@@ -156,11 +167,22 @@ int executaExterno(Comando *cmd)
         _exit(127);
     }
 
+    
+
+    
     /* ---- PAI ---- */
+      if (background)
+    {
+        printf("[%d] %d\n", proximo_job++, pid);  
+        return 0;
+    }
+
     int status;
     waitpid(pid, &status, 0);
     if (WIFEXITED(status))
     {
         int codigo_saida = WEXITSTATUS(status);
+        return codigo_saida;
+       
     }
 }

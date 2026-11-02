@@ -8,7 +8,7 @@ void executaPipeline(LinhaComando *linha);
 
 
 int verificaComando(Comando *cmd);
-int executaExterno(Comando *cmd);
+int executaExterno(Comando *cmd, int background);
 void trataComandos(Comando *cmd);
 int redirecionaEntrada(const char *arquivo);
 int redirecionaSaida(const char *arquivo);
