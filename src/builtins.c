@@ -23,7 +23,7 @@ BUILTINS[] = {
 
 int verfComandointerno(Comando *cmd){
 
-    for(int i = 0; i < sizeof(BUILTINS) / sizeof(BUILTINS[0]); i++){
+    for(unsigned long int i = 0; i < sizeof(BUILTINS) / sizeof(BUILTINS[0]); i++){
         if(strcmp(cmd->argv[0], BUILTINS[i].nome) == 0){
             BUILTINS[i].f(cmd);
             return 1;
@@ -52,7 +52,7 @@ static int builtin_cd(Comando *cmd){
 }
 
 static int builtin_pwd(Comando *cmd){
-    
+    (void)*cmd;
     char cwd[MAX_LINE];
     if (getcwd(cwd, sizeof(cwd)) != NULL){
         printf("%s\n", cwd);
@@ -65,5 +65,6 @@ static int builtin_pwd(Comando *cmd){
 }
 
 static int builtin_exit(Comando *cmd){
+    (void)*cmd;
     exit(0);
 }

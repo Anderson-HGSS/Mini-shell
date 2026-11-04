@@ -4,6 +4,7 @@ OBJS = src/main.o src/parser.o src/executor.o src/builtins.o
 
 mysh: $(OBJS)
 	$(CC) $(CFLAGS) $(OBJS) -o mysh
+	rm -f src/*.o
 clean:
-	rm src/*.o
+	rm -f src/*.o mysh
 	

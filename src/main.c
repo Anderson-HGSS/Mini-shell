@@ -10,36 +10,35 @@
 #include "executor.h"
 #include "builtins.h"
 
-
-static void tratador_sigchld(int sig) {
+static void tratador_sigchld(int sig)
+{
     (void)sig;
-    
+
     int errno_salvo = errno;
     int status;
     pid_t pid;
-    
-    while((pid = waitpid(-1, &status, WNOHANG)) > 0 );
+
+    while ((pid = waitpid(-1, &status, WNOHANG)) > 0)
+        ;
 
     errno = errno_salvo;
-
 }
 
-
-static void instalar_sinais(void) {
+static void instalar_sinais(void)
+{
     struct sigaction sa;
-    
+
     memset(&sa, 0, sizeof sa);
-    
+
     sigemptyset(&sa.sa_mask);
-    
+
     sa.sa_handler = tratador_sigchld;
     sa.sa_flags = SA_RESTART; /* read/fgets não falham com EINTR */
 
     sigaction(SIGCHLD, &sa, NULL);
 
     // Aqui a gente trata o Ctrl + C
-    /* TODO: SIGINT -> SIG_IGN (ou tratador que só escreve "\n") */
-    
+
     sa.sa_handler = SIG_IGN;
     sa.sa_flags = 0;
     sigaction(SIGINT, &sa, NULL);
@@ -55,7 +54,7 @@ int main(void)
 
     /*(Passo 08): instalar tratadores de sinal*/
     instalar_sinais();
-    
+
     for (;;)
     {
         printf("mysh> ");
@@ -71,8 +70,26 @@ int main(void)
         if (linha[0] == '\0')
             continue; /* ignora linha vazia */
 
+        static char ultima[MAX_LINE] = "";
+        /* ... dentro do laço, após ler ’linha’ e antes do parser ... */
+        if (strcmp(linha, "!!") == 0)
+        {
+            if(ultima[0]=='\0'){
+                printf("\n!!: Não há histórico de comando\n");
+                continue;
+            }
+
+            else{
+                strcpy(linha,ultima);
+                printf("%s\n",linha);
+            }
+            
+        }
+        
+            
         /* 1. tokenizar */
         int num_tokens = tokenizar_linha(linha, listaTokens, entre_aspas, MAX_LINE);
+
         if (num_tokens < 0)
         {
             fprintf(stderr, "mysh: erro de sintaxe\n");
@@ -82,31 +99,32 @@ int main(void)
             continue;
 
         /* 2. interpretar */
-        if (interpretar_tokens(listaTokens, entre_aspas, num_tokens,
-                               &linha_cmd, erro, sizeof erro) < 0)
+        if (interpretar_tokens(listaTokens, entre_aspas, num_tokens, &linha_cmd, erro, sizeof erro) < 0)
         {
             fprintf(stderr, "\nmysh: %s\n", erro);
         }
-
 
         /* 3. executar */
         else if (linha_cmd.n_cmds == 1)
         {
 
-            if (verfComandointerno(&linha_cmd.comandos[0]) == 0){
-                executaExterno(&linha_cmd.comandos[0],linha_cmd.background);            
+            if (verfComandointerno(&linha_cmd.comandos[0]) == 0)
+            {
+                executaExterno(&linha_cmd.comandos[0], linha_cmd.background);
             }
-
         }
 
         else{
             executaPipeline(&linha_cmd);
         }
 
+        strncpy(ultima, linha, MAX_LINE - 1);
+        ultima[MAX_LINE - 1] = '\0';
+        
         /* 4. liberar os tokens (só depois de executar) */
         for (int i = 0; i < num_tokens; i++)
             free(listaTokens[i]);
     }
-
+    
     return 0;
 }
